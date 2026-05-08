@@ -1,0 +1,125 @@
+
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <algorithm>
+
+using namespace std;
+
+struct Item {
+    int id;
+    int weight;
+    int value;
+
+    Item(int i, int w, int v) : id(i), weight(w), value(v) {}
+};
+
+struct Node {
+    int level;
+    int profit;
+    int weight;
+    float bound;
+    vector<int> items_selected;
+
+    Node(int n) : level(-1), profit(0), weight(0), bound(0), items_selected(n, 0) {}
+    Node(int lvl, int p, int w, float b, const vector<int>& sel)
+        : level(lvl), profit(p), weight(w), bound(b), items_selected(sel) {}
+};
+
+bool compare(const Item& a, const Item& b) {
+    double r1 = (double)a.value / a.weight;
+    double r2 = (double)b.value / b.weight;
+    return r1 > r2;
+}
+
+float calculateBound(const Node& u, int n, int W, const vector<Item>& arr) {
+    if (u.weight >= W) return 0;
+
+    float profit_bound = (float)u.profit;
+    int j = u.level + 1;
+    int total_weight = u.weight;
+
+    while (j < n && total_weight + arr[j].weight <= W) {
+        total_weight += arr[j].weight;
+        profit_bound += arr[j].value;
+        j++;
+    }
+
+    if (j < n)
+        profit_bound += (W - total_weight) * (float)arr[j].value / arr[j].weight;
+
+    return profit_bound;
+}
+
+void solve() {
+    int W, n;
+    cout << "Enter number of items: ";
+    cin >> n;
+
+    vector<Item> arr;
+    arr.reserve(n);
+
+    cout << "Enter weights and values:\n";
+    for (int i = 0; i < n; ++i) {
+       int w, v;
+       cout << "Item " << i + 1 << " (W V): ";
+       cin >> w >> v;
+       arr.push_back(Item(i, w, v)); // Use push_back with explicit constructor
+    }
+
+    cout << "Enter Capacity: ";
+    cin >> W;
+
+    sort(arr.begin(), arr.end(), compare);
+
+    queue<Node> Q;
+
+    Node u(n);
+    u.bound = calculateBound(u, n, W, arr);
+    Q.push(u);
+
+    int maxProfit = 0;
+    vector<int> final_set(n, 0);
+
+    while (!Q.empty()) {
+        u = Q.front();
+        Q.pop();
+
+        if (u.level == n - 1) continue;
+
+        int level = u.level + 1;
+
+        // Take the item
+        Node v(level, u.profit + arr[level].value, u.weight + arr[level].weight, 0, u.items_selected);
+        v.items_selected[arr[level].id] = 1;
+
+        if (v.weight <= W && v.profit > maxProfit) {
+            maxProfit = v.profit;
+            final_set = v.items_selected;
+        }
+
+        v.bound = calculateBound(v, n, W, arr);
+        if (v.bound > maxProfit) {
+            Q.push(v);
+        }
+
+        // Don't take the item
+        Node w(level, u.profit, u.weight, 0, u.items_selected);
+        w.items_selected[arr[level].id] = 0;
+
+        w.bound = calculateBound(w, n, W, arr);
+        if (w.bound > maxProfit) {
+            Q.push(w);
+        }
+    }
+
+    cout << "\nMaximum Profit: " << maxProfit;
+    cout << "\nSolution Set (Object Selection): ";
+    for (int i = 0; i < n; ++i) cout << final_set[i] << " ";
+    cout << "\n";
+}
+
+int main() {
+    solve();
+    return 0;
+}
