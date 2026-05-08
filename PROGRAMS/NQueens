@@ -1,0 +1,150 @@
+#include <iostream>
+#include <cmath>
+#include <vector>
+using namespace std;
+
+int x[100];
+int countSol = 0;
+vector<vector<int> > solutions;
+
+// Check safe position
+bool Place(int k, int i) {
+    for (int j = 1; j < k; j++) {
+        if (x[j] == i || abs(x[j] - i) == abs(j - k))
+            return false;
+    }
+    return true;
+}
+
+// Print board from solution vector
+void printBoard(const vector<int>& sol, int n) {
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (sol[i] == j)
+                cout << "Q ";
+            else
+                cout << ". ";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+// Print board from global x array
+void printCurrentBoard(int n) {
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (x[i] == j)
+                cout << "Q ";
+            else
+                cout << ". ";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+// Print solution as set of numbers
+void printSolutionSet(const vector<int>& sol, int n) {
+    cout << "{";
+    for (int i = 1; i <= n; i++) {
+        cout << sol[i];
+        if (i != n) cout << ",";
+    }
+    cout << "}\n";
+}
+
+// N-Queens using backtracking
+void NQueens(int k, int n) {
+    for (int i = 1; i <= n; i++) {
+        if (Place(k, i)) {
+            x[k] = i;
+
+            cout << "Placed Q at Row " << k << " Column " << i << endl;
+            printCurrentBoard(n);
+
+            if (k == n) {
+                countSol++;
+                cout << "===== SOLUTION " << countSol << " =====\n";
+                printCurrentBoard(n);
+
+                // Store solution if less than 2 solutions stored
+                if ((int)solutions.size() < 2) {
+                    vector<int> sol(n + 1);
+                    for (int idx = 1; idx <= n; idx++) {
+                        sol[idx] = x[idx];
+                    }
+                    solutions.push_back(sol);
+                }
+            }
+            else {
+                NQueens(k + 1, n);
+            }
+
+            // Backtracking
+            cout << "Backtracking from Row " << k << " Column " << i << endl;
+            x[k] = 0;
+            printCurrentBoard(n);
+        }
+    }
+}
+
+// Print combined two solution sets side by side
+void printCombinedSolutions(int n) {
+    if ((int)solutions.size() < 2) {
+        cout << "Less than two solutions found, cannot combine.\n";
+        return;
+    }
+
+    cout << "===== Combined Solutions (Solution 1 and Solution 2) =====\n";
+
+    vector<int>& sol1 = solutions[0];
+    vector<int>& sol2 = solutions[1];
+
+    for (int i = 1; i <= n; i++) {
+        // Print solution 1 row
+        for (int j = 1; j <= n; j++) {
+            if (sol1[i] == j)
+                cout << "Q ";
+            else
+                cout << ". ";
+        }
+        cout << "    "; // space between two boards
+
+        // Print solution 2 row
+        for (int j = 1; j <= n; j++) {
+            if (sol2[i] == j)
+                cout << "Q ";
+            else
+                cout << ". ";
+        }
+        cout << '\n';
+    }
+    cout << '\n';
+}
+
+// Main
+int main() {
+    int n;
+
+    cout << "Enter number of queens: ";
+    cin >> n;
+
+    NQueens(1, n);
+
+    if (countSol == 0)
+        cout << "No solution exists\n";
+    else if (countSol < 2)
+        cout << "Less than two solutions found.\n";
+    else {
+        printCombinedSolutions(n);
+
+        cout << "===== Solution Sets =====\n";
+        for (int i = 0; i < (int)solutions.size(); i++) {
+            cout << "Solution " << (i + 1) << ": ";
+            printSolutionSet(solutions[i], n);
+        }
+    }
+
+    return 0;
+}
